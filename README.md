@@ -3,4 +3,4 @@ Sistema de recomendação de trilha acadêmica baseado nas afinidades do usuári
 Pontifícia Universidade Católica do Paraná.
 Disciplina: Programação Lógica e Funcional.
 Alunos: Nicolas Felix Hrescak.
-Usuário do github: NicolasHrescak
+Usuário do github: NicolasHrescak.
