@@ -52,14 +52,22 @@ exibe_resultado([[Trilha, Pontuacao, Total, Percentual] | Resto]) :-%lista com a
 limpa_respostas :-
     retractall(resposta(_, _)).
 
-%Percorre as perguntas
+%predicado que faz as perguntas
 faz_perguntas :-
     forall(pergunta(ID, Texto, _),
         (
-            format('~w (s/n): ', [Texto]),
-            read(Resp),
+            perguntar(Texto, Resp),
             assertz(resposta(ID, Resp))
         )).
+
+% Predicado que mantem a consistencia da resposta (só aceita s ou n)
+perguntar(Texto, Resp) :-
+    repeat,
+    format('~w (s/n): ', [Texto]),
+    read(Input),
+    (Input == s ; Input == n), !,
+    Resp = Input.
+
 
 %prdicado principal como dito no documento.
 iniciar :-
