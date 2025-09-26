@@ -34,8 +34,36 @@ compare_percent(Order, [_T1,_P1,_Tot1,Percent1], [_T2,_P2,_Tot2,Percent2]) :-
     ; Percent1 < Percent2 -> Order = '>'   %segundo antes do primeiro
     ; Order = '=' ).
 
-%retorna a lista ordenada no modelo -> [Trilha, Pontuacao, Total, Percentual]
+%retorna a lista ordenada ness modelo -> [Trilha, Pontuacao, Total, Percentual]
 recomenda(ResultadoOrdenado) :-
     findall(Trilha, trilha(Trilha, _), Trilhas),
     maplist(resultado_trilha, Trilhas, ListaResultados),
     predsort(compare_percent, ListaResultados, ResultadoOrdenado).
+
+%exibe_resultado retorna o print formatado.
+exibe_resultado([[Trilha, Pontuacao, Total, Percentual] | Resto]) :-%lista com as trilhas
+    trilha(Trilha, Descricao),
+    format('Trilha: ~w~n', [Trilha]),
+    format('Descricao: ~w~n', [Descricao]),
+    format('Pontuacao: ~w / ~w (~2f%)~n~n', [Pontuacao, Total, Percentual]),
+    exibe_resultado(Resto).
+
+% Limpa as repostas antigas para caso ja tenha rodado o codigo antes
+limpa_respostas :-
+    retractall(resposta(_, _)).
+
+%Percorre as perguntas
+faz_perguntas :-
+    forall(pergunta(ID, Texto, _),
+        (
+            format('~w (s/n): ', [Texto]),
+            read(Resp),
+            assertz(resposta(ID, Resp))
+        )).
+
+%prdicado principal como dito no documento.
+iniciar :-
+    limpa_respostas,
+    faz_perguntas,
+    recomenda(Resultado),
+    exibe_resultado(Resultado).
