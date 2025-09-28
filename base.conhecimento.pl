@@ -61,3 +61,18 @@ perfil(redes_e_infraestrutura, sysadmin, 5).
 perfil(redes_e_infraestrutura, hardware_embarcado, 4).
 perfil(redes_e_infraestrutura, seguranca_informacao, 3).
 perfil(redes_e_infraestrutura, criptografia, 2).
+
+mensagem_trilha(inteligencia_artificial, 
+  'Você tem perfil analítico e gosta de algoritmos complexos, a trilha de IA é a mais recomendada para você!').
+
+mensagem_trilha(desenvolvimento_web, 
+  'Você gosta muito de front-end e da comunicação com o usuário, essa é a trilha mais recomendada para você!').
+
+mensagem_trilha(seguranca_da_informacao, 
+  'Você se preocupa com proteção de dados e cibersegurança, essa é a trilha mais recomendada para você!').
+
+mensagem_trilha(ciencia_de_dados, 
+  'Você gosta de análise de informações e visualização de padrões, essa é a trilha mais recomendada para você!').
+
+mensagem_trilha(redes_e_infraestrutura, 
+  'Você tem interesse em servidores e redes, essa é a trilha mais recomendada para você!').
