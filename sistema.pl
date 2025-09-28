@@ -44,9 +44,26 @@ compare_percent(Order, [_T1,_P1,_Tot1,Percent1], [_T2,_P2,_Tot2,Percent2]) :-
 
 %retorna a lista ordenada ness modelo -> [Trilha, Pontuacao, Total, Percentual]
 recomenda(ResultadoOrdenado) :-
-    findall(Trilha, trilha(Trilha, _), Trilhas),
-    maplist(resultado_trilha, Trilhas, ListaResultados),
-    predsort(compare_percent, ListaResultados, ResultadoOrdenado).
+    findall([Trilha, Pontuacao, Total, Percentual],
+        (
+            trilha(Trilha, _),
+            calcula_pontuacao(Trilha, Pontuacao, Total),
+            (Total > 0 -> Percentual is Pontuacao / Total * 100 ; Percentual = 0)
+        ),
+        Resultados),
+    sort(2, @>=, Resultados, ResultadoOrdenado),
+    (   todas_nulas(ResultadoOrdenado)
+    ->  writeln("Todas as respostas foram nulas, nao foi possivel definir uma trilha para voce!"), !
+    ;   true
+    ).
+
+%________________________________________________________________________________________________________
+
+%Para o caso de todas as respostas serem nulas.
+todas_nulas([]).
+todas_nulas([[_, Pontuacao, _, _] | Resto]) :-
+    Pontuacao =:= 0,
+    todas_nulas(Resto).
 
 %_______________________________________________________________________________________________________
 
@@ -112,4 +129,7 @@ iniciar :-
     limpa_respostas,
     faz_perguntas,
     recomenda(Resultado),
-    exibe_resultado(Resultado).
+    ( todas_nulas(Resultado)
+    -> true
+    ; exibe_resultado(Resultado)
+    ).
