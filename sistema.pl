@@ -1,25 +1,30 @@
 :- dynamic resposta/2. %definindo a resposta como dinamica
+%__________________________________________________________________________________________________________
 
-%calcula_pontuacao(Trilha, Pontuacao, Total)
+%predicado que calcula a pontuação
 calcula_pontuacao(Trilha, Pontuacao, Total) :-
-    findall(Peso, perfil(Trilha, _, Peso), ListaPesos), %pego todos os pesos dessa trilha
-    (   ListaPesos = []
-    ->  %caso a trilha não tenha um perfil definido ou nao tenha no arquivo
-        Total = 0, %Se ela não existe entao o total e a pontuacao é zero
-        Pontuacao = 0
-    ;   %soma total possível
-        sum_list(ListaPesos, Total),
-        %pega só os pesos em que a resposta foi "sim" e o "nao" é ignorado
-        findall(P, (
+    % Total considera todas as perguntas relacionadas às características da trilha
+    findall(P,
+        (
+            perfil(Trilha, Caracteristica, P),
+            pergunta(_, _, Caracteristica)
+        ),
+        ListaPesos),
+    sum_list(ListaPesos, Total),
+
+    % Pontuação soma apenas onde houve resposta 's'
+    findall(P,
+        (
             perfil(Trilha, Caracteristica, P),
             pergunta(ID, _, Caracteristica),
             resposta(ID, s)
-        ), ListaRespostas),
-        sum_list(ListaRespostas, Pontuacao)
-    ).
+        ),
+        ListaRespostas),
+    sum_list(ListaRespostas, Pontuacao).
 
-% -------------resultado da trilha--------------------------
+%____________________________________________________________________________________________________
 
+%resultado da trilha
 resultado_trilha(Trilha, [Trilha, Pontuacao, Total, Percentual]) :-
     calcula_pontuacao(Trilha, Pontuacao, Total),
     (   Total =:= 0 %aqui somos obrigado a definir que o total é 0 o percentual também é zero
@@ -27,12 +32,15 @@ resultado_trilha(Trilha, [Trilha, Pontuacao, Total, Percentual]) :-
     ;   Percentual is (Pontuacao / Total) * 100 %calcula o percentual
     ).
 
-%---------comparado pra dar o percentual decrescente--------------------
+%_______________________________________________________________________________________________________
 
+%comparado pra dar o percentual
 compare_percent(Order, [_T1,_P1,_Tot1,Percent1], [_T2,_P2,_Tot2,Percent2]) :-
     ( Percent1 > Percent2 -> Order = '<'   %primeiro antes do segundo
     ; Percent1 < Percent2 -> Order = '>'   %segundo antes do primeiro
     ; Order = '=' ).
+
+%_______________________________________________________________________________________________________
 
 %retorna a lista ordenada ness modelo -> [Trilha, Pontuacao, Total, Percentual]
 recomenda(ResultadoOrdenado) :-
@@ -40,17 +48,42 @@ recomenda(ResultadoOrdenado) :-
     maplist(resultado_trilha, Trilhas, ListaResultados),
     predsort(compare_percent, ListaResultados, ResultadoOrdenado).
 
-%exibe_resultado retorna o print formatado.
-exibe_resultado([[Trilha, Pontuacao, Total, Percentual] | Resto]) :-%lista com as trilhas
+%_______________________________________________________________________________________________________
+
+%exibe resultado pra carreira principal com o motivo.
+% exibe_resultado/1: trata o primeiro (melhor) com mensagem especial e depois imprime os demais
+exibe_resultado([]) :- !.
+exibe_resultado([[Trilha, Pontuacao, Total, Percentual] | Resto]) :-
+    % imprime o primeiro (com possivel mensagem especial)
+    trilha(Trilha, Descricao),
+    format('Trilha: ~w~n', [Trilha]),
+    format('Descricao: ~w~n', [Descricao]),
+    format('Pontuacao: ~w / ~w (~2f%)~n', [Pontuacao, Total, Percentual]),
+    (   mensagem_trilha(Trilha, Msg)
+    ->  format('~w~n~n', [Msg])
+    ;   nl
+    ),
+    % imprime o resto sem checar mensagem_trilha
+    exibe_resultado_resto(Resto).
+
+%__________________________________________________________________________________________________________
+
+%exibe o resultado do resto (sem ser o principal)
+exibe_resultado_resto([]) :- !.
+exibe_resultado_resto([[Trilha, Pontuacao, Total, Percentual] | Resto]) :-
     trilha(Trilha, Descricao),
     format('Trilha: ~w~n', [Trilha]),
     format('Descricao: ~w~n', [Descricao]),
     format('Pontuacao: ~w / ~w (~2f%)~n~n', [Pontuacao, Total, Percentual]),
-    exibe_resultado(Resto).
+    exibe_resultado_resto(Resto).
+
+%___________________________________________________________________________________________________________
 
 % Limpa as repostas antigas para caso ja tenha rodado o codigo antes
 limpa_respostas :-
     retractall(resposta(_, _)).
+
+%________________________________________________________________________________________________________
 
 %predicado que faz as perguntas
 faz_perguntas :-
@@ -59,16 +92,21 @@ faz_perguntas :-
             perguntar(Texto, Resp),
             assertz(resposta(ID, Resp))
         )).
+%__________________________________________________________________________________________________________
 
 % Predicado que mantem a consistencia da resposta (só aceita s ou n)
 perguntar(Texto, Resp) :-
     repeat,
     format('~w (s/n): ', [Texto]),
-    read(Input),
-    (Input == s ; Input == n), !,
-    Resp = Input.
+    flush_output,  % garante que aparece na tela antes de ler
+    read_line_to_string(user_input, Input),
+    string_lower(Input, Lower),
+    (   Lower = "s" -> Resp = s, !    % resposta válida
+    ;   Lower = "n" -> Resp = n, !    % resposta válida
+    ;   writeln("Resposta invalida, digite apenas s ou n."), fail
+    ).
 
-
+%__________________________________________________________________________________________________________
 %prdicado principal como dito no documento.
 iniciar :-
     limpa_respostas,
